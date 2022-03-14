@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Film, IFilm } from '../../models/film/film';
 import { FilmDTO } from '../../dto/film.dto';
-import { Types, Document, HydratedDocument } from 'mongoose';
+import { Types, HydratedDocument } from 'mongoose';
 import { ProductionCompanyModel } from '../../models/production-company';
 import { ProductionCompanyDTO } from '../../dto/production-company.dto';
 import { GenreDTO } from '../../dto/genre.dto';
@@ -18,22 +18,11 @@ export class FilmController {
     try {
       const result = await Film.findOne({
         id: Number(id),
-      }).exec();
-      if (result) {
-        const companies = await ProductionCompanyModel.find({
-          _id: result.production_companies,
-        }).exec();
-        const genres = await Genre.find({
-          _id: result.genres,
-        }).exec();
-        response.send({
-          ...result.toJSON(),
-          genres: genres.map((doc) => doc.toJSON()),
-          production_companies: companies.map((doc) => doc.toJSON()),
-        });
-      } else {
-        response.sendStatus(404);
-      }
+      })
+        .populate('genres')
+        .populate('production_companies')
+        .exec();
+      response.send(result);
     } catch (error) {
       response.status(400).send(error.message);
     }
@@ -41,7 +30,11 @@ export class FilmController {
 
   @Get()
   async allFilms(): Promise<HydratedDocument<IFilm>[]> {
-    return Film.find().exec();
+    console.log('fetched');
+    return Film.find({})
+      .populate('genres')
+      .populate('production_companies')
+      .exec();
   }
 
   @Patch(':id')
