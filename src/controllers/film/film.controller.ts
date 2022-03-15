@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Post, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { Film, IFilm } from '../../models/film/film';
 import { FilmDTO } from '../../dto/film.dto';
@@ -30,7 +39,6 @@ export class FilmController {
 
   @Get()
   async allFilms(): Promise<HydratedDocument<IFilm>[]> {
-    console.log('fetched');
     return Film.find({})
       .populate('genres')
       .populate('production_companies')
@@ -62,8 +70,6 @@ export class FilmController {
         filmDTO.production_companies,
       );
       const genresObjectID = await this.findOrCreateGenres(filmDTO.genres);
-      console.log(companiesObjectID);
-      console.log(genresObjectID);
       const film: HydratedDocument<IFilm> = new Film({
         ...filmDTO,
         production_companies: companiesObjectID,
@@ -74,6 +80,12 @@ export class FilmController {
     } catch (error) {
       return error;
     }
+  }
+
+  @Delete(':id')
+  async deleteFilm(@Param('id') id: number): Promise<void> {
+    const result = await Film.deleteOne({ id }).exec();
+    console.log(result);
   }
 
   async findOrCreateProductionCompanies(
