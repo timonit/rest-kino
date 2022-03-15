@@ -56,7 +56,12 @@ const FilmSchema = new Schema<IFilm>({
   backdrop_path: String,
   belongs_to_collection: String,
   budget: Number,
-  genres: [Schema.Types.ObjectId],
+  genres: [
+    {
+      type: Types.ObjectId,
+      ref: 'Genre',
+    },
+  ],
   homepage: String,
   id: Number,
   imdb_id: String,
@@ -65,7 +70,12 @@ const FilmSchema = new Schema<IFilm>({
   overview: String,
   popularity: Number,
   poster_path: String,
-  production_companies: [Types.ObjectId],
+  production_companies: [
+    {
+      type: Types.ObjectId,
+      ref: 'Production-Company',
+    },
+  ],
   production_countries: [ProductionCountry],
   release_date: String,
   revenue: Number,
