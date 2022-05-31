@@ -19,6 +19,9 @@ import { Genre } from '../../models/genre/genre';
 
 @Controller('film')
 export class FilmController {
+  /**
+   * Query film by id 
+   */
   @Get(':id')
   async getFilm(
     @Param('id') id: number,
@@ -32,11 +35,14 @@ export class FilmController {
         .populate('production_companies')
         .exec();
       response.send(result);
-    } catch (error) {
+    } catch (error: any) {
       response.status(400).send(error.message);
     }
   }
 
+  /**
+   * Query all films
+   */
   @Get()
   async allFilms(): Promise<HydratedDocument<IFilm>[]> {
     return Film.find({})
@@ -45,24 +51,30 @@ export class FilmController {
       .exec();
   }
 
+  /**
+   * Update film with id 
+   */
   @Patch(':id')
   async patchFilm(
     @Param('id') id: number,
     @Body() dto: Partial<FilmDTO>,
     @Res() response: Response,
-  ): Promise<void> {
+  ): Promise<any> {
     try {
       const film = await Film.findOne({ id: Number(id) }).exec();
       if (film) {
-        film.update(dto);
+        response.send(Film.updateOne(dto).exec());
       } else {
         response.sendStatus(404);
       }
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
+  /**
+   * Add film
+   */
   @Post()
   async addFilm(@Body() filmDTO: FilmDTO): Promise<FilmDTO> {
     try {
@@ -74,20 +86,26 @@ export class FilmController {
         ...filmDTO,
         production_companies: companiesObjectID,
         genres: genresObjectID,
+        watched: false,
       });
       film.save();
       return filmDTO;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
+  /**
+   * Remove film with id
+   */
   @Delete(':id')
-  async deleteFilm(@Param('id') id: number): Promise<void> {
-    const result = await Film.deleteOne({ id }).exec();
-    console.log(result);
+  async deleteFilm(@Param('id') id: number): Promise<any> {
+    return Film.deleteOne({ id }).exec();
   }
 
+  /**
+   * Find or create production companies
+   */
   async findOrCreateProductionCompanies(
     companiesDTO: ProductionCompanyDTO[],
   ): Promise<Types.ObjectId[]> {
@@ -106,13 +124,15 @@ export class FilmController {
     return companies.map((company) => company._id);
   }
 
+  /**
+   * Find or create genres
+   */
   async findOrCreateGenres(genresDTO: GenreDTO[]): Promise<Types.ObjectId[]> {
     const genres = [];
     for (let i = 0; i < genresDTO.length; i++) {
       let genre = await Genre.findOne({
         id: genresDTO[i].id,
       }).exec();
-      console.log('GENRE', genre);
       if (!genre) {
         genre = new Genre(genresDTO[i]);
         genre.save();
